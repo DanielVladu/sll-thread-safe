@@ -81,6 +81,7 @@ int delete_node(list *root, int data)
   }
   else
   {
+    pthread_rwlock_wrlock(&(root->head->m));
     prev = root->head;
     curr = root->head->next;
     while (curr !=NULL)
@@ -108,8 +109,9 @@ int delete_node(list *root, int data)
         prev = prev->next;
       }
     }
+    pthread_rwlock_unlock(&(root->head->m));
+    pthread_rwlock_unlock(&(root->m));
   }
-  pthread_rwlock_unlock(&(root->m));
   pthread_rwlock_rdlock(&(root->m));
 
   if (status && root->verbose)
