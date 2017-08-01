@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
       printf("***USAGE: ./server <port>\n");
       exit(1);
     }
-    
+
     int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr;
 
@@ -34,6 +34,10 @@ int main(int argc, char *argv[])
     bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 
     listen(listenfd, 10);
+
+    FILE *f;
+    f=fopen("c:\\test.bin", "rb");
+    char x[10]="ABCDEFGHIJ";
 
     while(1)
     {

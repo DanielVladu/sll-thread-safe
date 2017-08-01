@@ -1,3 +1,13 @@
+/*
+ * sll_api.h
+ *
+ *  Created on: Aug 1, 2017
+ *      Author: daniel
+ */
+
+#ifndef SLL_API_H_
+#define SLL_API_H_
+
 
 #include <pthread.h>
 
@@ -36,3 +46,6 @@ int print_list(list *);
 int printnode_int(node *);
 
 void set_verbose(list *,int);
+
+
+#endif /* SLL_API_H_ */
