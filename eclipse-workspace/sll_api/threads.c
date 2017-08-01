@@ -1,11 +1,3 @@
-/*
- * threads.c
- *
- *  Created on: Aug 1, 2017
- *      Author: daniel
- */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -13,10 +5,11 @@
 //#include <semaphores.h>
 #include "sll_api.h"
 
+static pthread_barrier_t barrier;
 
 void *thread1(void* l)
 {
-
+  pthread_barrier_wait(&barrier);
   add_node(l,2);
   add_node(l,4);
   add_node(l,10);
@@ -30,7 +23,7 @@ void *thread1(void* l)
 
 void *thread2(void *l)
 {
-
+  pthread_barrier_wait(&barrier);
   add_node(l,11);
   add_node(l,1);
   delete_node(l,11);
@@ -42,7 +35,7 @@ void *thread2(void *l)
 
 void *thread3(void *l)
 {
-
+  pthread_barrier_wait(&barrier);
   add_node(l,30);
   add_node(l,25);
   add_node(l,100);
@@ -62,6 +55,8 @@ int main()
 
   list *l = create_list();
   set_verbose(l,1);
+
+  pthread_barrier_init(&barrier, NULL, 3);
 
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
