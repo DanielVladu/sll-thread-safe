@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
-//#include <semaphores.h>
 #include "sll_api.h"
+
+pthread_rwlock_t t = PTHREAD_RWLOCK_INITIALIZER;
 
 static pthread_barrier_t barrier;
 
@@ -54,12 +55,13 @@ int main()
   void *status;
 
   list *l = create_list();
+  //list *l = NULL;
   set_verbose(l,1);
 
   pthread_barrier_init(&barrier, NULL, 3);
 
   pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  //pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   rc = pthread_create(&threads[0], &attr, thread1, (void*)l);
   if (rc) {

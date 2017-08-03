@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -14,6 +14,7 @@ list *create_list()
     root->tail = NULL;
     root->verbose = 0;
     root->n = 0;
+    pthread_rwlock_init(&root->m, NULL);
     return root;
 }
 
@@ -21,6 +22,11 @@ int add_node(list *root, int data)
 {
   int status = 0;
 
+  if(root == NULL)
+  {
+    printf("(PID:%ld,TID:%ld) ERR add_node:List is NULL\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
   node *aux = (node*)malloc(sizeof(node));
   aux->next = NULL;
   aux->val = data;
@@ -37,9 +43,7 @@ int add_node(list *root, int data)
   }
   else
   {
-    pthread_rwlock_wrlock(&(root->tail->m));
     root->tail->next = aux;
-    pthread_rwlock_unlock(&(root->tail->m));
     root->tail = aux;
     root->n++;
     pthread_rwlock_unlock(&(root->m));
@@ -64,16 +68,20 @@ int add_node(list *root, int data)
 
 int delete_node(list *root, int data)
 {
-
   int status = 0;
   node *curr=NULL;
   node *prev=NULL;
+  if (root == NULL || root->head == NULL || root->tail == NULL)
+  {
+    status = 0;
+    printf("(PID:%ld,TID:%ld) ERR delete_node:List or list's head or tail is NULL\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
   pthread_rwlock_wrlock(&(root->m));
   if (root->head->val == data)
   {
     curr = root->head;
     root->head = root->head->next;
-    //pthread_rwlock_destroy(&(curr->m));
     free (curr);
     root->n--;
     pthread_rwlock_unlock(&(root->m));
@@ -81,7 +89,6 @@ int delete_node(list *root, int data)
   }
   else
   {
-    pthread_rwlock_wrlock(&(root->head->m));
     prev = root->head;
     curr = root->head->next;
     while (curr !=NULL)
@@ -89,7 +96,6 @@ int delete_node(list *root, int data)
       if (curr->val == data && curr->next != NULL)
       {
         prev->next = curr->next;
-        //pthread_rwlock_destroy(&(curr->m));
         free(curr);
         root->n--;
         status = 1;
@@ -98,7 +104,6 @@ int delete_node(list *root, int data)
       {
         prev->next = NULL;
         root->tail = prev;
-        //pthread_rwlock_destroy(&(curr->m));
         free (curr);
         root->n--;
         status = 1;
@@ -109,7 +114,6 @@ int delete_node(list *root, int data)
         prev = prev->next;
       }
     }
-    pthread_rwlock_unlock(&(root->head->m));
     pthread_rwlock_unlock(&(root->m));
   }
   pthread_rwlock_rdlock(&(root->m));
@@ -131,6 +135,11 @@ int delete_node(list *root, int data)
 
 int flush_list(list* root)
 {
+  if (root == NULL)
+  {
+    printf("(PID:%ld,TID:%ld) ERR flush_list:List is NULL\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
   pthread_rwlock_wrlock(&(root->m));
   if (root->verbose)
   {
@@ -141,7 +150,6 @@ int flush_list(list* root)
   while (curr != NULL)
   {
     next = curr->next;
-    pthread_rwlock_destroy(&(curr->m));
     free(curr);
     curr = next;
   }
@@ -152,8 +160,18 @@ int flush_list(list* root)
   return 1;
 }
 
-void sort_list(list *root)
+int sort_list(list *root)
 {
+  if (root == NULL)
+  {
+    printf("(PID:%ld,TID:%ld) ERR sort_list:List is NULL\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
+  if (root->head == NULL)
+  {
+    printf("(PID:%ld,TID:%ld) ERR sort_list:List is empty\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
   pthread_rwlock_wrlock(&(root->m));
   if (root->verbose)
   {
@@ -171,6 +189,7 @@ void sort_list(list *root)
     aux = aux->next;
   }
   pthread_rwlock_unlock(&(root->m));
+  return 1;
 }
 
 void mergesort(node** headRef)
@@ -242,6 +261,11 @@ void mergesplit(node* source, node** frontRef,node** backRef)
 
 int print_list(list *root)
 {
+  if (root == NULL)
+  {
+    printf("(PID:%ld,TID:%ld) ERR print_list:List is NULL\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
   pthread_rwlock_rdlock(&(root->m));
   printf("(PID:%ld,TID:%ld) Printing list: \n",(long)getpid(),(long)pthread_self());
 
@@ -261,11 +285,17 @@ int printnode_int(node *data)
   return 1;
 }
 
-void set_verbose(list* root, int x)
+int set_verbose(list* root, int x)
 {
+  if (root == NULL)
+  {
+    printf("(PID:%ld,TID:%ld) ERR set_verbose:List is NULL\n",(long)getpid(),(long)pthread_self());
+    return -1;
+  }
   pthread_rwlock_wrlock(&(root->m));
   if (x)
     root->verbose = 1;
   else root->verbose = 0;
   pthread_rwlock_unlock(&(root->m));
+  return 1;
 }
